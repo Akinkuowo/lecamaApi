@@ -28,7 +28,7 @@ console.log(db.select('*').from('Register').then(data => {
 	console.log(data[1].name)
 }))
 
-app.get('/', (req, res) => { res.json(db.register) })
+app.get('/', (req, res) => { res.json("it working") })
 
 app.post('/register', (req, res) => {
 	const { name, email, username, password } = req.body;
@@ -38,15 +38,20 @@ app.post('/register', (req, res) => {
 	const hash = bcrypt.hashSync(password);
 	
 
-	db('Register').insert({
-		name: name,
-		email: email,
-		username: username,
-		password: hash,
-		joined: new Date()
+	db.transaction(trx => {
+		trx.insert({
+			name: name,
+			email: email,
+			username: username,
+			password: hash,
+			joined: new Date()
+		}).into('Register')
+		.returning('*')
+		.then(console.log("sent"))
+		.then(trx.commit)
+		.catch(trx.rollback)
 	})
-	.returning('*')
-	.then(console.log("sent"))
+	
 	// .catch(err => res.status(400).json('User alreay exist'))
 	// db.transaction(trx => {
 	// 	trx.insert({
@@ -84,6 +89,6 @@ app.post('/register', (req, res) => {
 
 app.listen(process.env.PORT || 3000, ()=> {
 	// console.log(`app is running on port ${process.env.PORT}`);
-	console.log(`app is running on port 3000`)
+	console.log(`app is running on port ${process.env.PORT} || 3000`)
 }); 
 
